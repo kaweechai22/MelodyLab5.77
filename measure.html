@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PhySound Acoustics</title><meta name="description" content="PhySound Acoustics Data+Cal+Visualizer แอปเดียวทดลองและวิเคราะห์ข้อมูลเรื่องเสียงครบจบ"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"></head><body class="detailPage page-measure"><header><div class="wrap nav detailNav"><button class="backBtn" onclick="history.length>1?history.back():location.href='index.html'">←</button><a class="brand" href="index.html"><img src="icon-192.png" alt="PhySound"><span>Audio Measure & Settings (วัดเสียงและตั้งค่า)</span></a></div></header><main class="wrap detailMain" data-current="measure"><section class="section homeMenu"><div class="menuGrid"><a class="menuItem" href="visualizer.html"><span class="icon">〰️</span><h3>Wave Visualizer (ภาพจำลองคลื่น)</h3><p>ภาพจำลองคลื่นเสียงแบบสังเกตการณ์</p></a><a class="menuItem" href="measure.html"><span class="icon">🎙️</span><h3>Measure (วัดเสียง)</h3><p>ไมค์, RMS, dB, Fast/Slow, min/max/avg</p></a><a class="menuItem" href="analysis.html"><span class="icon">📊</span><h3>Analysis (วิเคราะห์)</h3><p>Scope, FFT, Autocorrelation, Top 3 Peaks</p></a><a class="menuItem" href="spectrogram.html"><span class="icon">🌈</span><h3>Spectrogram (สเปกโตรแกรม)</h3><p>ภาพเวลา–ความถี่และฮาร์มอนิก</p></a><a class="menuItem" href="generator.html"><span class="icon">🎹</span><h3>Generator (สร้างเสียง)</h3><p>Tone, Beat, White Noise</p></a><a class="menuItem" href="calibration.html"><span class="icon">🎯</span><h3>Calibration (ปรับเทียบ)</h3><p>เช็ก 440 Hz, ปรับ dB Offset, บันทึกรุ่นมือถือ</p></a><a class="menuItem" href="session.html"><span class="icon">💾</span><h3>Session (ส่งออกข้อมูล)</h3><p>Auto log, Raw Data, Export</p></a></div></section>
+<section class="section" id="visualizer">
+  <div class="sectionHead">
+    <div>
+      <h2>Sound Wave Visualizer (ภาพจำลองคลื่นเสียง)</h2>
+      
+    </div>
+    <div class="actions">
+      <button id="vizPlayBtn">เล่น</button>
+      <button id="vizPauseBtn" class="secondary">หยุด</button>
+      <button id="vizResetBtn" class="secondary">Reset</button>
+      <button id="vizExportBtn" class="secondary">บันทึกภาพ PNG</button>
+    </div>
+  </div>
+  <div class="visualizerGrid">
+    <div class="card mainViz">
+      <div class="vizModeBar">
+        <button class="active" data-viz="longitudinal">Longitudinal</button>
+        <button data-viz="pressure">Pressure</button>
+        <button data-viz="displacementPressure">Displacement + Pressure</button>
+        <button data-viz="transverseCompare">Longitudinal / Transverse</button>
+        <button data-viz="superposition">Superposition</button>
+        <button data-viz="beatsViz">Beats</button>
+        <button data-viz="standingAir">Standing Wave</button>
+        <button data-viz="resonanceViz">Resonance</button>
+        <button data-viz="harmonicsViz">Harmonics / Timbre</button>
+        <button data-viz="dopplerViz">Doppler</button>
+      </div>
+      <canvas id="visualizerCanvas" width="1200" height="520"></canvas>
+      <div class="vizReadout">
+        <div><label>Frequency f</label><b id="vizFreqOut">440 Hz</b></div>
+        <div><label>Amplitude A</label><b id="vizAmpOut">0.70</b></div>
+        <div><label>Wave Speed v</label><b id="vizSpeedOut">343 m/s</b></div>
+        <div><label>Wavelength λ</label><b id="vizLambdaOut">0.78 m</b></div>
+      </div>
+    </div>
+
+    <div class="card controlViz">
+      <h3>Parameters</h3>
+      <div class="field"><label>Frequency f (Hz)</label><input id="vizFreq" type="range" min="100" max="1000" step="10" value="440"></div>
+      <div class="field"><label>Amplitude A</label><input id="vizAmp" type="range" min="0.1" max="1.0" step="0.05" value="0.70"></div>
+      <div class="field"><label>Wave Speed v (m/s)</label><input id="vizSpeed" type="range" min="250" max="400" step="1" value="343"></div>
+      <div class="field"><label>Phase / Time Speed</label><input id="vizTimeSpeed" type="range" min="0.1" max="3.0" step="0.1" value="1.0"></div>
+      <div class="field"><label>Mode Setting</label>
+        <select id="vizSubMode">
+          <option value="closed">Air Column: closed-open</option>
+          <option value="open">Air Column: open-open</option>
+          <option value="sine">Timbre: sine</option>
+          <option value="square">Timbre: square</option>
+          <option value="sawtooth">Timbre: sawtooth</option>
+        </select>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<section class="section activeDetail" id="measure"><div class="sectionHead"><div><h2><span id="micDot" class="statusDot"></span>Audio Measure & Settings (วัดเสียงและตั้งค่า)</h2><p class="sub">ตั้งค่าการวัด เลือก preset และบันทึกข้อมูลเสียงจริง</p></div></div><div class="card full"><div class="actions"><button id="startMic">🎙️ เปิดไมโครโฟน</button><button id="stopMic" class="secondary" disabled>หยุดไมค์</button><button id="captureBtn" class="good" disabled>บันทึกค่าปัจจุบัน</button><button id="autoLogBtn" class="secondary" disabled>เริ่ม Auto Log</button><button id="downloadBtn" class="secondary">ดาวน์โหลด CSV เฉพาะหัวข้อนี้</button><button id="downloadExcelBtn" class="secondary">ดาวน์โหลด Excel เฉพาะหัวข้อนี้</button><button id="clearBtn" class="warn">ล้างข้อมูล</button></div><p id="micStatus" class="note hidden"></p><div class="formGrid"><div class="field"><label>Preset การทดลอง</label><select id="preset"><option value="general">ทั่วไป</option><option value="tone">ส้อมเสียง/เสียงเดี่ยว</option><option value="voice">เสียงพูด</option><option value="beat">บีตส์</option><option value="resonance">ท่ออากาศ/การสั่นพ้อง</option><option value="doppler">ดอปเพลอร์</option><option value="environment">เสียงสิ่งแวดล้อม</option></select></div><div class="field"><label>ป้ายกำกับการทดลอง</label><input id="labelInput" placeholder="เช่น ส้อมเสียง 440 Hz"></div><div class="field"><label>Run / กลุ่มทดลอง</label><input id="runInput" value="Run 1"></div><div class="field teacherSetting"><label>FFT Size</label><select id="fftSize"><option>1024</option><option selected>2048</option><option>4096</option><option>8192</option></select></div><div class="field teacherSetting"><label>Smoothing</label><input id="smoothing" type="number" min="0" max="0.95" step="0.05" value="0.65"></div><div class="field"><label>Min Frequency (Hz)</label><input id="minFreq" type="number" value="50"></div><div class="field"><label>Max Frequency (Hz)</label><input id="maxFreq" type="number" value="5000"></div><div class="field"><label>dB Offset</label><input id="dbOffset" type="number" value="0" step="0.1"></div><div class="field"><label>dB Mode</label><select id="dbMode"><option value="fast">Fast</option><option value="slow">Slow</option></select></div><div class="field"><label>Auto Log Interval (s)</label><input id="logInterval" type="number" value="1" step="0.5"></div><div class="field"><label>History Length</label><input id="historyLength" type="number" value="220"></div></div></div><div class="readouts"><div class="readout"><label>ความถี่หลัก</label><strong id="mainFreqOut">-- Hz</strong></div><div class="readout"><label>FFT Peak</label><strong id="fftOut">-- Hz</strong></div><div class="readout"><label>Autocorrelation</label><strong id="autoOut">-- Hz</strong></div><div class="readout"><label>Period</label><strong id="periodOut">-- ms</strong></div><div class="readout"><label>dB</label><strong id="dbOut">-- dB</strong></div><div class="readout"><label>dB Min/Max/Avg</label><strong id="dbStatsOut">--</strong></div></div></section>
+<section class="section" id="calibration">
+  <div class="sectionHead">
+    <div>
+      <h2>Calibration Check (ตรวจสอบการปรับเทียบ)</h2>
+      <p class="sub">ตรวจสอบความน่าเชื่อถือของมือถือแต่ละเครื่องก่อนเริ่มเก็บข้อมูลจริง</p>
+    </div>
+    <div class="actions">
+      <button id="captureCalBtn" class="good" disabled>บันทึกผล Calibration</button>
+      <button id="applyDbCalBtn" class="secondary">ตั้ง dB Offset จากค่าอ้างอิง</button>
+      <button id="downloadCalBtn" class="secondary">ดาวน์โหลด Calibration CSV</button>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card side">
+      <h3>1) ข้อมูลอุปกรณ์</h3>
+      <div class="field"><label>รุ่นมือถือ</label><input id="deviceModel" placeholder="เช่น iPhone 13, Samsung A53"></div>
+      <div class="field"><label>ระบบปฏิบัติการ</label><select id="deviceOS"><option>Android</option><option>iOS</option><option>อื่น ๆ</option></select></div>
+      <div class="field"><label>เบราว์เซอร์</label><input id="browserName" placeholder="เช่น Chrome, Safari"></div>
+      <div class="field"><label>ระยะห่างจากแหล่งเสียง</label><input id="calDistance" value="30 cm"></div>
+      <p class="note compact">แนะนำให้ใช้มือถือเครื่องเดิมในแต่ละกลุ่มตลอดกิจกรรม และบันทึกข้อมูลอุปกรณ์ทุกครั้ง</p>
+    </div>
+
+    <div class="card side">
+      <h3>2) เช็กความถี่อ้างอิง</h3>
+      <div class="field"><label>Reference Frequency (Hz)</label><input id="refFreq" type="number" value="440" step="0.1"></div>
+      <div class="field"><label>ค่าที่แอปอ่านได้ขณะนี้</label><input id="measuredFreqBox" readonly value="-- Hz"></div>
+      <p>ความคลาดเคลื่อน: <span class="pill" id="freqErrorOut">--</span></p>
+      <p class="small">ใช้กับ tone generator หรือส้อมเสียง เช่น 440 Hz เพื่อดูว่าเครื่องอ่านความถี่ใกล้เคียงเพียงใด</p>
+    </div>
+
+    <div class="card side">
+      <h3>3) ปรับเทียบ dB Offset</h3>
+      <div class="field"><label>Reference dB จากเครื่องอ้างอิง</label><input id="refDb" type="number" value="70" step="0.1"></div>
+      <div class="field"><label>dB ที่แอปอ่านได้ขณะนี้</label><input id="measuredDbBox" readonly value="-- dB"></div>
+      <p>Offset ที่ควรใช้: <span class="pill" id="dbCalOut">-- dB</span></p>
+      <p class="small">ถ้าไม่มีเครื่องวัดเสียงจริง ให้ใช้ dB เพื่อเปรียบเทียบภายในกิจกรรมเดียวกันเท่านั้น</p>
+    </div>
+
+    <div class="card side">
+      <h3>4) เสียงอ้างอิง 440 Hz</h3>
+      <p class="sub">ใช้เปิดเสียงอ้างอิงเพื่อทดสอบมือถือแต่ละเครื่อง</p>
+      <div class="actions"><button id="playCalTone">เล่น 440 Hz</button><button id="stopCalTone" class="secondary">หยุด</button></div>
+      <p class="note compact">เปิดเสียงไม่ดังเกินไป และวางมือถือห่างจากลำโพงในระยะเท่ากันทุกกลุ่ม</p>
+    </div>
+
+    <div class="card full">
+      <h3>Calibration Log</h3>
+      <div class="tableWrap">
+        <table>
+          <thead><tr><th>เวลา</th><th>รุ่นมือถือ</th><th>OS</th><th>Browser</th><th>ระยะ</th><th>Ref Hz</th><th>Measured Hz</th><th>Error Hz</th><th>Error %</th><th>Ref dB</th><th>Measured dB</th><th>dB Offset</th></tr></thead>
+          <tbody id="calBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="analysis"><div class="sectionHead"><div><h2>Acoustic Analysis (การวิเคราะห์เสียง)</h2><p class="sub">Scope, Spectrum, Autocorrelation, Frequency History, Peak Hold และ Top 3 Peaks</p></div><div class="actions"><button id="freezeBtn" class="secondary">Freeze Graph</button><button id="resetPeakBtn" class="secondary">Reset Peak Hold</button><button id="saveGraphsBtn" class="secondary">บันทึกกราฟ PNG</button></div></div><div class="grid"><div class="card wide"><h3>Audio Scope — รูปคลื่นตามเวลา</h3><canvas id="scopeCanvas" width="1000" height="260"></canvas></div><div class="card side"><h3>Audio Amplitude</h3><div class="meterBig" id="bigDb">--</div><p style="text-align:center"><span class="pill" id="dbLevel">รอการวัด</span></p><canvas id="ampCanvas" class="canvasSmall" width="600" height="200"></canvas></div><div class="card wide"><h3>Audio Spectrum — FFT + Peak Hold</h3><canvas id="spectrumCanvas" width="1000" height="260"></canvas></div><div class="card side"><h3>Top 3 Peaks</h3><p class="sub">ใช้กับเสียงหลายความถี่/ฮาร์มอนิก</p><ol id="topPeaks"><li>-- Hz</li><li>-- Hz</li><li>-- Hz</li></ol><h3>Audio Autocorrelation</h3><canvas id="autoCanvas" class="canvasSmall" width="600" height="200"></canvas></div><div class="card full"><h3>Frequency History</h3><canvas id="historyCanvas" width="1000" height="260"></canvas></div></div></section><section class="section" id="spectrogram"><div class="sectionHead"><div><h2>Spectrogram View (มุมมองสเปกโตรแกรม)</h2><p class="sub">ภาพเวลา–ความถี่ ใช้ดูฮาร์มอนิก เสียงพูด เครื่องดนตรี และดอปเพลอร์</p></div></div><div class="card full"><canvas id="spectrogramCanvas" class="spectrogram" width="1200" height="320"></canvas><p class="small">สีสว่าง = พลังงานเสียงมากในย่านความถี่นั้น</p></div></section><section class="section" id="generator"><div class="sectionHead"><div><h2>Signal Generator & Simulation (สร้างสัญญาณและการจำลอง)</h2><p class="sub">สร้างเสียงเพื่อใช้ทดลองและให้เครื่องมือวิเคราะห์ตรวจจับ</p></div></div><div class="grid"><div class="card third"><h3>🎹 Tone Generator</h3><div class="field"><label>ความถี่ (Hz)</label><input id="toneFreq" type="number" value="440"></div><div class="field"><label>ความดัง</label><input id="toneVol" type="range" min="0" max="0.35" step="0.01" value="0.06"></div><div class="field"><label>ชนิดคลื่น</label><select id="toneType"><option>sine</option><option>square</option><option>triangle</option><option>sawtooth</option></select></div><div class="actions"><button id="playTone">เล่น</button><button id="stopTone" class="secondary">หยุด</button></div></div><div class="card third"><h3>🎵 Beat Generator</h3><div class="field"><label>f₁ (Hz)</label><input id="beatF1" type="number" value="440"></div><div class="field"><label>f₂ (Hz)</label><input id="beatF2" type="number" value="444"></div><div class="field"><label>ความดัง</label><input id="beatVol" type="range" min="0" max="0.35" step="0.01" value="0.06"></div><p>Beat Frequency: <span class="pill" id="beatOut">-- Hz</span></p><canvas id="beatCanvas" class="canvasSmall" width="600" height="200"></canvas><div class="actions"><button id="playBeat">เล่น</button><button id="stopBeat" class="secondary">หยุด</button></div></div><div class="card third"><h3>🌫️ White Noise</h3><p class="sub">ใช้กับกิจกรรมการสั่นพ้องและการตอบสนองของท่อ/ขวด</p><div class="field"><label>ความดัง Noise</label><input id="noiseVol" type="range" min="0" max="0.25" step="0.01" value="0.03"></div><div class="actions"><button id="playNoise">เล่น</button><button id="stopNoise" class="secondary">หยุด</button></div><p class="note compact">ควรเปิดเสียงเบาและไม่จ่อหูนักเรียน</p></div></div></section><section class="section" id="resonance"><div class="sectionHead"><div><h2>Standing Wave & Resonance (คลื่นนิ่งและการสั่นพ้อง)</h2><p class="sub">เครื่องมือช่วยออกแบบการทดลองคลื่นนิ่งและการสั่นพ้องในท่ออากาศ</p></div></div><div class="grid"><div class="card side"><h3>ตั้งค่าท่อ</h3><div class="field"><label>ชนิดท่อ</label><select id="resMode"><option value="closed">ท่อปลายปิด 1 ด้าน</option><option value="open">ท่อปลายเปิด 2 ด้าน</option></select></div><div class="field"><label>อัตราเร็วเสียง v (m/s)</label><input id="resV" type="number" value="343"></div><div class="field"><label>ความยาวท่อ L (m)</label><input id="resL" type="number" value="0.25" step="0.01"></div><p>ความถี่มูลฐาน: <span class="pill" id="resOut">-- Hz</span></p><p>ฮาร์มอนิกที่คาดได้: <span class="pill" id="harmonicsOut">--</span></p></div><div class="card wide"><h3>Resonance Peaks — ค่าที่คาดจากทฤษฎี</h3><canvas id="resonanceCanvas" width="1000" height="260"></canvas></div></div></section><section class="section" id="session"><div class="sectionHead"><div><h2>Data Export Center (ศูนย์ส่งออกข้อมูล)</h2><p class="sub">บันทึกข้อมูลดิบ เลือกคอลัมน์ และส่งออก CSV/Excel เพื่อให้นักเรียนนำไปวิเคราะห์เอง</p></div><div class="actions"><button id="saveSettingsBtn" class="secondary">Save Settings</button><button id="resetSettingsBtn" class="secondary">Reset Settings</button><button id="configLinkBtn" class="secondary">Copy Config Link</button></div></div><div class="grid"><div class="card full"><h3>เลือกคอลัมน์ Export</h3><div class="toggle" id="columnToggles"></div></div><div class="card full"><h3>Data Log (ข้อมูลเฉพาะหัวข้อ Measure)</h3><div class="tableWrap"><table><thead><tr id="logHead"></tr></thead><tbody id="logBody"></tbody></table></div></div></div></section></main><footer class="footer wrap">PhySound Acoustics Data+Cal+Visualizer • Sound Data Analysis Tool</footer><script src="app.js"></script></body></html>

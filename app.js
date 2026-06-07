@@ -533,5 +533,123 @@ function initVisualizer(){
   drawVisualizer();
 }
 
-function init(){fillBrowserInfo();initVisualizer();Object.entries(ctxs).forEach(([n,ctx])=>drawGrid(ctx,canvases[n]));drawBeat();drawResonance();renderColumnToggles();readConfig();loadSettings();renderLog();$("startMic").onclick=startMic;$("stopMic").onclick=stopMic;$("captureBtn").onclick=capture;$("downloadBtn").onclick=downloadCsv;$("downloadExcelBtn").onclick=downloadExcel;if($("captureCalBtn"))$("captureCalBtn").onclick=captureCalibration;if($("downloadCalBtn"))$("downloadCalBtn").onclick=downloadCalibrationCsv;if($("applyDbCalBtn"))$("applyDbCalBtn").onclick=applyDbCalibration;if($("playCalTone"))$("playCalTone").onclick=()=>{$("toneFreq").value=440;playTone();};if($("stopCalTone"))$("stopCalTone").onclick=stopTone;$("clearBtn").onclick=()=>{logs=[];renderLog();};$("autoLogBtn").onclick=toggleAutoLog;$("preset").onchange=()=>{applyPreset();};if($("userMode")) $("userMode").onchange=applyMode;$("freezeBtn").onclick=()=>{frozen=!frozen;$("freezeBtn").textContent=frozen?"Unfreeze Graph":"Freeze Graph";};$("resetPeakBtn").onclick=()=>{peakHold=[];};$("saveGraphsBtn").onclick=saveGraphs;$("saveSettingsBtn").onclick=saveSettings;$("resetSettingsBtn").onclick=resetSettings;$("configLinkBtn").onclick=copyConfig;$("playTone").onclick=playTone;$("stopTone").onclick=stopTone;$("playNoise").onclick=playNoise;$("stopNoise").onclick=stopNoise;$("playBeat").onclick=playBeat;$("stopBeat").onclick=stopBeat;["beatF1","beatF2","beatVol"].forEach(id=>$(id).addEventListener("input",()=>{if(beatOsc1)beatOsc1.frequency.value=Number($("beatF1").value||440);if(beatOsc2)beatOsc2.frequency.value=Number($("beatF2").value||444);if(beatGain)beatGain.gain.value=Number($("beatVol").value||.06);drawBeat();}));["resV","resL","resMode"].forEach(id=>$(id).addEventListener("input",drawResonance));["toneFreq","toneVol","toneType"].forEach(id=>$(id).addEventListener("input",()=>{if(toneOsc)toneOsc.frequency.value=Number($("toneFreq").value||440);if(toneGain)toneGain.gain.value=Number($("toneVol").value||.06);if(toneOsc)toneOsc.type=$("toneType").value;}));$("noiseVol").addEventListener("input",()=>{if(noiseGain)noiseGain.gain.value=Number($("noiseVol").value||.03);});if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}}
+function init(){fillBrowserInfo();initVisualizer();initLocalExportCards();Object.entries(ctxs).forEach(([n,ctx])=>drawGrid(ctx,canvases[n]));drawBeat();drawResonance();renderColumnToggles();readConfig();loadSettings();renderLog();$("startMic").onclick=startMic;$("stopMic").onclick=stopMic;$("captureBtn").onclick=capture;$("downloadBtn").onclick=downloadCsv;$("downloadExcelBtn").onclick=downloadExcel;if($("captureCalBtn"))$("captureCalBtn").onclick=captureCalibration;if($("downloadCalBtn"))$("downloadCalBtn").onclick=downloadCalibrationCsv;if($("applyDbCalBtn"))$("applyDbCalBtn").onclick=applyDbCalibration;if($("playCalTone"))$("playCalTone").onclick=()=>{$("toneFreq").value=440;playTone();};if($("stopCalTone"))$("stopCalTone").onclick=stopTone;$("clearBtn").onclick=()=>{logs=[];renderLog();};$("autoLogBtn").onclick=toggleAutoLog;$("preset").onchange=()=>{applyPreset();};if($("userMode")) $("userMode").onchange=applyMode;$("freezeBtn").onclick=()=>{frozen=!frozen;$("freezeBtn").textContent=frozen?"Unfreeze Graph":"Freeze Graph";};$("resetPeakBtn").onclick=()=>{peakHold=[];};$("saveGraphsBtn").onclick=saveGraphs;$("saveSettingsBtn").onclick=saveSettings;$("resetSettingsBtn").onclick=resetSettings;$("configLinkBtn").onclick=copyConfig;$("playTone").onclick=playTone;$("stopTone").onclick=stopTone;$("playNoise").onclick=playNoise;$("stopNoise").onclick=stopNoise;$("playBeat").onclick=playBeat;$("stopBeat").onclick=stopBeat;["beatF1","beatF2","beatVol"].forEach(id=>$(id).addEventListener("input",()=>{if(beatOsc1)beatOsc1.frequency.value=Number($("beatF1").value||440);if(beatOsc2)beatOsc2.frequency.value=Number($("beatF2").value||444);if(beatGain)beatGain.gain.value=Number($("beatVol").value||.06);drawBeat();}));["resV","resL","resMode"].forEach(id=>$(id).addEventListener("input",drawResonance));["toneFreq","toneVol","toneType"].forEach(id=>$(id).addEventListener("input",()=>{if(toneOsc)toneOsc.frequency.value=Number($("toneFreq").value||440);if(toneGain)toneGain.gain.value=Number($("toneVol").value||.06);if(toneOsc)toneOsc.type=$("toneType").value;}));$("noiseVol").addEventListener("input",()=>{if(noiseGain)noiseGain.gain.value=Number($("noiseVol").value||.03);});if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}}
 document.addEventListener("DOMContentLoaded",init);
+
+
+/* v5.10 local export per experiment page */
+const localPageLogs = {};
+function getActiveExperimentName(){
+  const card = document.querySelector(".localExportCard[data-export-name]");
+  if(card?.dataset?.exportName) return card.dataset.exportName;
+  const main = document.querySelector("main.detailMain");
+  if(main?.dataset?.current) return main.dataset.current;
+  const sec = document.querySelector("section.activeDetail");
+  if(sec?.id) return sec.id;
+  return document.title || "experiment";
+}
+function getLocalPageSnapshot(){
+  const page = getActiveExperimentName();
+  const now = new Date().toLocaleString("th-TH");
+  const row = {time: now, page};
+
+  // Visualizer values
+  if($("vizFreqOut")) row.frequency = $("vizFreqOut").textContent || "";
+  if($("vizAmpOut")) row.amplitude = $("vizAmpOut").textContent || "";
+  if($("vizSpeedOut")) row.wave_speed = $("vizSpeedOut").textContent || "";
+  if($("vizLambdaOut")) row.wavelength = $("vizLambdaOut").textContent || "";
+
+  // Analysis / measure readouts
+  if($("mainFreqOut")) row.main_frequency = $("mainFreqOut").textContent || "";
+  if($("fftOut")) row.fft_peak = $("fftOut").textContent || "";
+  if($("autoOut")) row.autocorrelation = $("autoOut").textContent || "";
+  if($("periodOut")) row.period = $("periodOut").textContent || "";
+  if($("dbOut")) row.db = $("dbOut").textContent || "";
+  if($("dbStatsOut")) row.db_stats = $("dbStatsOut").textContent || "";
+
+  // Resonance
+  if($("resOut")) row.fundamental_frequency = $("resOut").textContent || "";
+  if($("harmonicsOut")) row.harmonics = $("harmonicsOut").textContent || "";
+
+  // Spectrogram / canvas state
+  if($("spectrogramCanvas")) row.graph = "spectrogram_canvas";
+  if($("spectrumCanvas")) row.graph = row.graph ? row.graph + "; spectrum_canvas" : "spectrum_canvas";
+  if($("historyCanvas")) row.graph = row.graph ? row.graph + "; frequency_history_canvas" : "frequency_history_canvas";
+
+  // Generator
+  if($("toneFreq")) row.tone_frequency_hz = $("toneFreq").value || "";
+  if($("toneType")) row.waveform = $("toneType").value || "";
+  if($("beatF1")) row.beat_f1_hz = $("beatF1").value || "";
+  if($("beatF2")) row.beat_f2_hz = $("beatF2").value || "";
+  if($("beatOut")) row.beat_frequency = $("beatOut").textContent || "";
+
+  // Settings / labels
+  if($("labelInput")) row.label = $("labelInput").value || "";
+  if($("runInput")) row.run = $("runInput").value || "";
+  if($("preset")) row.preset = $("preset").value || "";
+
+  return row;
+}
+function renderLocalExport(){
+  const page = getActiveExperimentName();
+  const logs = localPageLogs[page] || [];
+  document.querySelectorAll(".localExportCard").forEach(card=>{
+    const head = card.querySelector(".localHead");
+    const body = card.querySelector(".localBody");
+    if(!head || !body) return;
+    head.innerHTML = "";
+    body.innerHTML = "";
+    const keys = Array.from(new Set(logs.flatMap(r=>Object.keys(r))));
+    keys.forEach(k=>{
+      const th = document.createElement("th");
+      th.textContent = k;
+      head.appendChild(th);
+    });
+    logs.forEach(r=>{
+      const tr = document.createElement("tr");
+      keys.forEach(k=>{
+        const td = document.createElement("td");
+        td.textContent = r[k] ?? "";
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+  });
+}
+function captureLocalPageData(){
+  const page = getActiveExperimentName();
+  localPageLogs[page] ??= [];
+  localPageLogs[page].push(getLocalPageSnapshot());
+  renderLocalExport();
+}
+function downloadLocalPageCsv(){
+  const page = getActiveExperimentName();
+  const logs = localPageLogs[page] || [];
+  const keys = Array.from(new Set(logs.flatMap(r=>Object.keys(r))));
+  if(!logs.length){
+    alert("ยังไม่มีข้อมูลที่บันทึกในหน้านี้");
+    return;
+  }
+  const csv = [keys, ...logs.map(r=>keys.map(k=>r[k] ?? ""))]
+    .map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob(["\ufeff"+csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `PhySound_${String(page).replaceAll(" ","_")}_Data.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function clearLocalPageData(){
+  const page = getActiveExperimentName();
+  localPageLogs[page] = [];
+  renderLocalExport();
+}
+function initLocalExportCards(){
+  document.querySelectorAll(".localCaptureBtn").forEach(btn=>btn.onclick=captureLocalPageData);
+  document.querySelectorAll(".localDownloadBtn").forEach(btn=>btn.onclick=downloadLocalPageCsv);
+  document.querySelectorAll(".localClearBtn").forEach(btn=>btn.onclick=clearLocalPageData);
+  renderLocalExport();
+}
+
