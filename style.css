@@ -279,3 +279,13 @@ main.wrap{
     display:none;
   }
 }
+
+
+/* v5.13 MelodyLab branding */
+.topicByTopicNote b{
+  font-size:1.02em;
+}
+.topicByTopicNote span{
+  opacity:.9;
+  font-weight:600;
+}

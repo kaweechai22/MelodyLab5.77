@@ -1,12 +1,12 @@
 {
-  "name": "PhySound Acoustics Data+Cal+Visualizer",
-  "short_name": "PhySound",
+  "name": "MelodyLab",
+  "short_name": "MelodyLab",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#07111f",
   "theme_color": "#0f172a",
-  "description": "แอปเก็บข้อมูลเสียงพร้อม Calibration Check และ Sound Wave Visualizer แบบ Observation Mode",
+  "description": "ห้องทดลองเสียงและเก็บข้อมูล ด้วยมือถือ",
   "icons": [
     {
       "src": "icon-192.png",
